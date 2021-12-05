@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/uart/uart.h"
+#include "aqi_calculator_factory.h"
 
 namespace esphome {
 namespace pmsx003 {
@@ -42,6 +43,10 @@ class PMSX003Component : public uart::UARTDevice, public Component {
   void set_humidity_sensor(sensor::Sensor *humidity_sensor);
   void set_formaldehyde_sensor(sensor::Sensor *formaldehyde_sensor);
 
+  void set_aqi_sensor(sensor::Sensor *aqi_sensor) { aqi_sensor_ = aqi_sensor; }
+
+  void set_aqi_calculation_type(AQICalculatorType aqi_calc_type) { aqi_calc_type_ = aqi_calc_type; }
+
  protected:
   optional<bool> check_byte_();
   void parse_data_();
@@ -73,6 +78,11 @@ class PMSX003Component : public uart::UARTDevice, public Component {
   sensor::Sensor *temperature_sensor_{nullptr};
   sensor::Sensor *humidity_sensor_{nullptr};
   sensor::Sensor *formaldehyde_sensor_{nullptr};
+  sensor::Sensor *aqi_sensor_{nullptr};
+
+  AQICalculatorType aqi_calc_type_;
+  AQICalculatorFactory aqi_calculator_factory_ = AQICalculatorFactory();
+
 };
 
 }  // namespace pmsx003

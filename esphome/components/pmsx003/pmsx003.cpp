@@ -170,9 +170,17 @@ void PMSX003Component::parse_data_() {
       uint16_t pm_particles_50um = this->get_16_bit_uint_(24);
       uint16_t pm_particles_100um = this->get_16_bit_uint_(26);
 
+      int8_t aqi_value = -1;
+      if (this->aqi_sensor_ != nullptr && this->pm_2_5_sensor_ != nullptr &&
+          this->pm_10_0_sensor_ != nullptr) {
+          AbstractAQICalculator *calculator =
+                 this->aqi_calculator_factory_.get_calculator(this->aqi_calc_type_);
+          aqi_value = calculator->get_aqi(pm_2_5_concentration, pm_10_0_concentration);
+      }
+
       ESP_LOGD(TAG,
-               "Got PM1.0 Concentration: %u µg/m^3, PM2.5 Concentration %u µg/m^3, PM10.0 Concentration: %u µg/m^3",
-               pm_1_0_concentration, pm_2_5_concentration, pm_10_0_concentration);
+               "Got PM1.0 Concentration: %u µg/m^3, PM2.5 Concentration %u µg/m^3, PM10.0 Concentration: %u µg/m^3, AQI: %u",
+               pm_1_0_concentration, pm_2_5_concentration, pm_10_0_concentration, aqi_value);
 
       if (this->pm_1_0_std_sensor_ != nullptr)
         this->pm_1_0_std_sensor_->publish_state(pm_1_0_std_concentration);
@@ -200,6 +208,8 @@ void PMSX003Component::parse_data_() {
         this->pm_particles_50um_sensor_->publish_state(pm_particles_50um);
       if (this->pm_particles_100um_sensor_ != nullptr)
         this->pm_particles_100um_sensor_->publish_state(pm_particles_100um);
+      if (aqi_value != -1)
+        this->aqi_sensor_->publish_state(aqi_value);
       break;
     }
     case PMSX003_TYPE_5003T: {

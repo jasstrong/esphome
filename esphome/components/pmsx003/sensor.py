@@ -19,6 +19,7 @@ from esphome.const import (
     CONF_PM_10_0UM,
     CONF_TEMPERATURE,
     CONF_TYPE,
+    DEVICE_CLASS_AQI,
     DEVICE_CLASS_PM1,
     DEVICE_CLASS_PM10,
     DEVICE_CLASS_PM25,
@@ -38,6 +39,17 @@ DEPENDENCIES = ["uart"]
 pmsx003_ns = cg.esphome_ns.namespace("pmsx003")
 PMSX003Component = pmsx003_ns.class_("PMSX003Component", uart.UARTDevice, cg.Component)
 PMSX003Sensor = pmsx003_ns.class_("PMSX003Sensor", sensor.Sensor)
+
+AQICalculatorType = pmsx003_ns.enum("AQICalculatorType")
+
+CONF_AQI = "aqi"
+CONF_CALCULATION_TYPE = "calculation_type"
+UNIT_INDEX = "index"
+
+AQI_CALCULATION_TYPE = {
+    "CAQI": AQICalculatorType.CAQI_TYPE,
+    "AQI": AQICalculatorType.AQI_TYPE,
+}
 
 TYPE_PMSX003 = "PMSX003"
 TYPE_PMS5003T = "PMS5003T"
@@ -66,6 +78,10 @@ def validate_pmsx003_sensors(value):
     for key, types in SENSORS_TO_TYPE.items():
         if key in value and value[CONF_TYPE] not in types:
             raise cv.Invalid(f"{value[CONF_TYPE]} does not have {key} sensor!")
+    if CONF_AQI in value and CONF_PM_2_5 not in value:
+        raise cv.Invalid("AQI computation requires PM 2.5 sensor")
+    if CONF_AQI in value and CONF_PM_10_0 not in value:
+        raise cv.Invalid("AQI computation requires PM 10 sensor")
     return value
 
 
@@ -164,6 +180,19 @@ CONFIG_SCHEMA = (
                 accuracy_decimals=0,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
+            cv.Optional(CONF_AQI): sensor.sensor_schema(
+                unit_of_measurement=UNIT_INDEX,
+                icon=ICON_CHEMICAL_WEAPON,
+                accuracy_decimals=0,
+                device_class=DEVICE_CLASS_AQI,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ).extend(
+                {
+                    cv.Required(CONF_CALCULATION_TYPE): cv.enum(
+                        AQI_CALCULATION_TYPE, upper=True
+                    ),
+                }
+            ),
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
@@ -237,3 +266,8 @@ async def to_code(config):
     if CONF_FORMALDEHYDE in config:
         sens = await sensor.new_sensor(config[CONF_FORMALDEHYDE])
         cg.add(var.set_formaldehyde_sensor(sens))
+
+    if CONF_AQI in config:
+        sens = await sensor.new_sensor(config[CONF_AQI])
+        cg.add(var.set_aqi_sensor(sens))
+        cg.add(var.set_aqi_calculation_type(config[CONF_AQI][CONF_CALCULATION_TYPE]))
