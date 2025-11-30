@@ -24,6 +24,9 @@ sensor:
       name: PM <10µm Weight concentration
       id: pm_10_0
       accuracy_decimals: 1
+    aqi:
+      name: SEN5X AQI
+      calculation_type: CAQI
     nox:
       name: NOx
     voc:

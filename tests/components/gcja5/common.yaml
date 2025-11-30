@@ -7,6 +7,9 @@ sensor:
       name: "Particulate Matter <2.5µm Concentration"
     pm_10_0:
       name: "Particulate Matter <10.0µm Concentration"
+    aqi:
+      name: "GCJA5 AQI"
+      calculation_type: AQI
     pmc_0_5:
       name: "PMC 0.5"
     pmc_1_0:

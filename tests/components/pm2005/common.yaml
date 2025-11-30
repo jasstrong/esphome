@@ -7,3 +7,6 @@ sensor:
       name: PM2.5
     pm_10_0:
       name: PM10.0
+    aqi:
+      name: PM2005 AQI
+      calculation_type: AQI
